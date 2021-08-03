@@ -6,8 +6,8 @@ const workbook = XLSX.readFile('Can Tho.xlsx');
 const SheetName = workbook.SheetNames[0];
 const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[SheetName]);
 
-async function loopReq(index, length, worksheet){
-    if (index>=length){
+async function loopReq(index, emptyLen, worksheet){
+    if(emptyLen == 10){
         XLSX.utils.sheet_add_json(workbook.Sheets[SheetName], worksheet);
         XLSX.writeFile(workbook, "Can Tho.xlsx");
         return;
@@ -36,16 +36,22 @@ async function loopReq(index, length, worksheet){
                 };
                 worksheet.push(data);
                 console.log(`Done request: ${index}`);
+
+                emptyLen = 0;
+            }else{
+                emptyLen++;
             };
-            loopReq(index+1, length, worksheet);
+            console.log(emptyLen);
+            loopReq(index+1, emptyLen, worksheet);
         })
         .catch(function (error) {
-            loopReq(index, length, worksheet);
-        console.log(error);
+            loopReq(index, emptyLen, worksheet);
+            console.log(error);
         })
         .then(function () {
             // always executed
         });
 }
 
-loopReq(0,12160,worksheet);
+let emptyLen = 0;
+loopReq(0,emptyLen, worksheet);

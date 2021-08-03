@@ -2,7 +2,7 @@ const axios = require('axios');
 
 module.exports = {
     createSBD: function(Index){
-        var cityID = "550";
+        var cityID = "290";
         var Str = new Array(6 - Index.toString().length).join("0").toString() + Index.toString();
 
         var SBD = cityID + Str;
