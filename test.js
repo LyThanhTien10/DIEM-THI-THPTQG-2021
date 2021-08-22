@@ -1,9 +1,10 @@
 const axios = require('axios');
 const XLSX = require('xlsx');
 const sumMark = require('./modules').sumMarks;
-const workbook = XLSX.readFile('DIEM.xlsx');
+const fs = require('fs');
+const workbook = XLSX.readFile('ĐIỂM THI THPTQG 2021.xlsx');
 const SheetName = workbook.SheetNames[0];
-
+const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[SheetName]);
 
 //Function to find stop id of each city
 const findStop = async (min, max, id)=>{
@@ -68,7 +69,7 @@ const getCapacity = async (arr)=>{
 }
 
 
-var cityId = Array.from({length:64},(_,index) => index + 1);
+var cityId = Array.from({length:1},(_,index) => index + 1);
 getCapacity(cityId)
     .then(async(result) => {
         const capacity = await result;
@@ -85,7 +86,7 @@ getCapacity(cityId)
     })
     .then(async(idArr)=>{
         var database = [];
-        const batches = createBatch(idArr,1000);
+        const batches = createBatch(idArr,500);
         await (async function(){
             for (const batch of batches){
                 try {
@@ -93,32 +94,12 @@ getCapacity(cityId)
                         const url = `https://diemthi.vnanet.vn/Home/SearchBySobaodanh?code=${item[1]}&nam=2021`;
                         const getFunc = item[0];
                         const result = await getFunc(url).then(result =>{
-                            if(result!=undefined){
-                                return {
-                                    "SBD": result.Code,
-                                    "Toán": result.Toan,
-                                    "Lý": result.VatLi,
-                                    "Hóa": result.HoaHoc,
-                                    "Sinh": result.SinhHoc,
-                                    "Ngoại ngữ": result.NgoaiNgu,
-                                    "Ngữ văn": result.NguVan,
-                                    "Sử": result.LichSu,
-                                    "Địa": result.DiaLi,
-                                    "GDCD": result.GDCD,
-                                    "Khối A": sumMark(result.Toan,result.VatLi,result.HoaHoc),
-                                    "Khối B": sumMark(result.Toan,result.HoaHoc,result.SinhHoc),
-                                    "Khối A01": sumMark(result.Toan,result.VatLi,result.NgoaiNgu),
-                                    "Khối C": sumMark(result.NguVan,result.LichSu,result.DiaLi),
-                                    "Khối D": sumMark(result.Toan,result.NguVan,result.NgoaiNgu)
-                                };
-                            }
-                            return undefined;
+                            return result;
                         });
+                        await database.push(result);
                         delete url;
                         delete getFunc;
-                        if (result!=undefined){
-                            database.push(result);
-                        }
+                        delete result;
                         console.log(item[1]);
                     }));
                   } catch(err) {
@@ -128,9 +109,28 @@ getCapacity(cityId)
         })();
         return database;
     })
-    .then(database =>{
-        console.log(database);
-        console.log(database.length);
-        XLSX.utils.sheet_add_json(workbook.Sheets[SheetName], database);
-        XLSX.writeFile(workbook, "DIEM.xlsx");
+    .then(async(databases) =>{
+        await databases.map((database)=>{
+            let data = {
+                "SBD": database[i].Code,
+                "Toán": database[i].Toan,
+                "Lý": database[i].VatLi,
+                "Hóa": database[i].HoaHoc,
+                "Sinh": database[i].SinhHoc,
+                "Ngoại ngữ": database[i].NgoaiNgu,
+                "Ngữ văn": database[i].NguVan,
+                "Sử": database[i].LichSu,
+                "Địa": database[i].DiaLi,
+                "GDCD": database[i].GDCD,
+                "Khối A": sumMark(database[i].Toan,database[i].VatLi,database[i].HoaHoc),
+                "Khối B": sumMark(database[i].Toan,database[i].HoaHoc,database[i].SinhHoc),
+                "Khối A01": sumMark(database[i].Toan,database[i].VatLi,database[i].NgoaiNgu),
+                "Khối C": sumMark(database[i].NguVan,database[i].LichSu,database[i].DiaLi),
+                "Khối D": sumMark(database[i].Toan,database[i].NguVan,database[i].NgoaiNgu)
+            };
+            worksheet.push(data);
+            delete data;
+        });
+        XLSX.utils.sheet_add_json(workbook.Sheets[SheetName], worksheet);
+        XLSX.writeFile(workbook, "ĐIỂM THI THPTQG 2021.xlsx");
     });
