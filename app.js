@@ -1,9 +1,6 @@
 const axios = require('axios');
-const XLSX = require('xlsx');
+const Excel = require('exceljs');
 const sumMark = require('./modules').sumMarks;
-const workbook = XLSX.readFile('DIEM.xlsx');
-const SheetName = workbook.SheetNames[0];
-
 
 //Function to find stop id of each city
 const findStop = async (min, max, id)=>{
@@ -68,7 +65,7 @@ const getCapacity = async (arr)=>{
 }
 
 
-var cityId = Array.from({length:64},(_,index) => index + 1);
+var cityId = Array.from({length:1},(_,index) => index + 1);
 getCapacity(cityId)
     .then(async(result) => {
         const capacity = await result;
@@ -85,7 +82,7 @@ getCapacity(cityId)
     })
     .then(async(idArr)=>{
         var database = [];
-        const batches = createBatch(idArr,1000);
+        const batches = createBatch(idArr.slice(0,1000),1000);
         await (async function(){
             for (const batch of batches){
                 try {
@@ -129,8 +126,38 @@ getCapacity(cityId)
         return database;
     })
     .then(database =>{
-        console.log(database);
-        console.log(database.length);
-        XLSX.utils.sheet_add_json(workbook.Sheets[SheetName], database);
-        XLSX.writeFile(workbook, "DIEM.xlsx");
+        const options = {
+            filename: 'DIEM.xlsx',
+            useStyles: true,
+            useSharedStrings: true
+          };
+           
+        const workbook = new Excel.stream.xlsx.WorkbookWriter(options);
+        
+        const worksheet = workbook.addWorksheet('my sheet');
+        
+        worksheet.columns = [
+            { header: 'SBD', key: 'SBD' },
+            { header: 'Toán', key: 'Toán' },
+            { header: 'Lý', key: 'Lý' },
+            { header: 'Hóa', key: 'Hóa' },
+            { header: 'Sinh', key: 'Sinh' },
+            { header: 'Ngoại ngữ', key: 'Ngoại ngữ' },
+            { header: 'Ngữ văn', key: 'Ngữ văn' },
+            { header: 'Sử', key: 'Sử' },
+            { header: 'Địa', key: 'Địa' },
+            { header: 'Khối A', key: 'Khối A' },
+            { header: 'Khối B', key: 'Khối B' },
+            { header: 'Khối A01', key: 'Khối A01' },
+            { header: 'Khối C', key: 'Khối C' },
+            { header: 'Khối D', key: 'Khối D' },
+        ];
+
+        for (let i=0;i<database.length;i++){
+            worksheet.addRow(database[i]).commit();
+        }
+
+        workbook.commit().then(function() {
+            console.log('excel file created');
+        });
     });
