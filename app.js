@@ -65,7 +65,7 @@ const getCapacity = async (arr)=>{
 }
 
 
-var cityId = Array.from({length:1},(_,index) => index + 1);
+var cityId = Array.from({length:64},(_,index) => index + 1);
 getCapacity(cityId)
     .then(async(result) => {
         const capacity = await result;
@@ -82,7 +82,7 @@ getCapacity(cityId)
     })
     .then(async(idArr)=>{
         var database = [];
-        const batches = createBatch(idArr.slice(0,1000),1000);
+        const batches = createBatch(idArr,5000);
         await (async function(){
             for (const batch of batches){
                 try {
