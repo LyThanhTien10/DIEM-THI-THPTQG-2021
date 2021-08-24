@@ -81,6 +81,7 @@ getCapacity(cityId)
         return idArr;
     })
     .then(async(idArr)=>{
+        let sum = 0;
         var database = [];
         const batches = createBatch(idArr,5000);
         await (async function(){
@@ -115,7 +116,9 @@ getCapacity(cityId)
                         delete getFunc;
                         if (result!=undefined){
                             database.push(result);
+                            sum++;
                         }
+                        console.log(sum);
                         console.log(item[1]);
                     }));
                   } catch(err) {
@@ -126,6 +129,7 @@ getCapacity(cityId)
         return database;
     })
     .then(database =>{
+        console.log(database.length);
         const options = {
             filename: 'DIEM.xlsx',
             useStyles: true,
@@ -156,7 +160,7 @@ getCapacity(cityId)
         for (let i=0;i<database.length;i++){
             worksheet.addRow(database[i]).commit();
         }
-
+        console.log(database.length);
         workbook.commit().then(function() {
             console.log('excel file created');
         });
