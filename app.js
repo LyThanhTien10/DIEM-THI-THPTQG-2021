@@ -83,7 +83,7 @@ getCapacity(cityId)
     .then(async(idArr)=>{
         let sum = 0;
         var database = [];
-        const batches = createBatch(idArr,5000);
+        const batches = createBatch(idArr,1000);
         await (async function(){
             for (const batch of batches){
                 try {
@@ -91,7 +91,7 @@ getCapacity(cityId)
                         const url = `https://diemthi.vnanet.vn/Home/SearchBySobaodanh?code=${item[1]}&nam=2021`;
                         const getFunc = item[0];
                         const result = await getFunc(url).then(result =>{
-                            if(result!=undefined){
+                            if(result!=undefined && result.Code != undefined){
                                 return {
                                     "SBD": result.Code,
                                     "Toán": result.Toan,
@@ -134,7 +134,7 @@ getCapacity(cityId)
             filename: 'DIEM.xlsx',
             useStyles: true,
             useSharedStrings: true
-          };
+        };
            
         const workbook = new Excel.stream.xlsx.WorkbookWriter(options);
         
@@ -160,8 +160,8 @@ getCapacity(cityId)
         for (let i=0;i<database.length;i++){
             worksheet.addRow(database[i]).commit();
         }
-        console.log(database.length);
         workbook.commit().then(function() {
             console.log('excel file created');
         });
+        return;
     });
